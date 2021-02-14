@@ -9,7 +9,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM
 
 # Load data
-company = 'FB'
+company = 'TSLA'
 
 start = dt.datetime(2012, 1, 1)
 end = dt.datetime(2020, 1, 1)
@@ -43,8 +43,11 @@ model.add(LSTM(units=50))
 model.add(Dropout(0.2))
 model.add(Dense(units=1))  # Prediction of the next closing value
 
+epochs = 50
+batch_size = 64
+
 model.compile(optimizer='adam', loss='mean_squared_error')
-model.fit(x_train, y_train, epochs=25, batch_size=32)
+model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size)
 
 ''' Test the model accuracy on existing data'''
 
@@ -76,8 +79,18 @@ predicted_prices = scaler.inverse_transform(predicted_prices)
 # Plot the test predictions
 plt.plot(actual_prices, color='black', label=f"Actual {company} price")
 plt.plot(predicted_prices, color='green', label=f"Predicted {company} price")
-plt.title(f"{company} share price")
+plt.suptitle(f"{company} share price")
+plt.title(f"Epochs = {epochs}, Batch size = {batch_size}, Prediction days = {prediction_days}")
 plt.xlabel("Time")
 plt.ylabel(f"{company} share price")
 plt.legend()
 plt.show()
+
+# Predict next day
+real_data = [model_inputs[len(model_inputs) + 1 - prediction_days:len(model_inputs+1), 0]]
+real_data = np.array(real_data)
+real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
+
+prediction = model.predict(real_data)
+prediction = scaler.inverse_transform(prediction)[0][0]
+print(f"Prediction : {prediction}")
